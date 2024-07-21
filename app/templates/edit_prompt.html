@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Editar Prompt</h2>
+  <form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <table>
+      <tr>
+        <td>{{ form.name.label }}</td>
+        <td>{{ form.name(size=32) }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.text.label }}</td>
+        <td>{{ form.text(rows=10, cols=40) }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.temperature.label }}</td>
+        <td>
+          {{ form.temperature }}
+          <span id="temp_value">{{ form.temperature.data }}</span>
+        </td>
+      </tr>
+      <tr>
+        <td>{{ form.model.label }}</td>
+        <td>{{ form.model }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.categories.label }}</td>
+        <td>{{ form.categories }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.json_file.label }}</td>
+        <td>{{ form.json_file(class="form-control-file") }}</td>
+      </tr>
+    </table>
+    <p><input type="submit" value="Salvar"></p>
+  </form>
+  <script>
+    var slider = document.getElementById("temperature");
+    var output = document.getElementById("temp_value");
+    slider.oninput = function() {
+      output.innerHTML = this.value;
+    }
+  </script>
+{% endblock %}

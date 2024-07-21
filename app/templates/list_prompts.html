@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ title }}</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-message {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+    
+    <div class="action-buttons" style="display: flex; align-items: center;">
+        <a href="{{ url_for('main.add_prompt') }}" class="btn btn-primary" style="margin-right: 20px; height: 100%;">Adicionar Novo Prompt</a>
+        <button id="delete-selected" class="btn btn-danger" style="margin-right: 20px; height: 100%;" disabled>Excluir Selecionados</button>
+        <form method="get" action="{{ url_for('main.list_prompts') }}" class="filters-form" style="display: flex; gap: 10px;">
+            <div class="filter">
+                <label for="models">Modelos:</label>
+                <select name="models" id="models" class="form-control">
+                    <option value="" {% if '' in request.args.getlist('models') %}selected{% endif %}>Todos</option>
+                    {% for model in models %}
+                        <option value="{{ model.id }}" {% if model.id|string in request.args.getlist('models') %}selected{% endif %}>{{ model.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter">
+                <label for="categories">Categorias:</label>
+                <select name="categories" id="categories" class="form-control">
+                    <option value="" {% if '' in request.args.getlist('categories') %}selected{% endif %}>Todas</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id|string in request.args.getlist('categories') %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter">
+                <label for="ratings">Avaliações:</label>
+                <select name="ratings" id="ratings" class="form-control">
+                    <option value="" {% if request.args.get('ratings') is none or request.args.get('ratings') == '' %}selected{% endif %}>Todas</option>
+                    <option value="1" {% if '1' == request.args.get('ratings') %}selected{% endif %}>★☆☆☆☆</option>
+                    <option value="2" {% if '2' == request.args.get('ratings') %}selected{% endif %}>★★☆☆☆</option>
+                    <option value="3" {% if '3' == request.args.get('ratings') %}selected{% endif %}>★★★☆☆</option>
+                    <option value="4" {% if '4' == request.args.get('ratings') %}selected{% endif %}>★★★★☆</option>
+                    <option value="5" {% if '5' == request.args.get('ratings') %}selected{% endif %}>★★★★★</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="height: 100%;">Filtrar</button>
+            <button type="button" class="btn btn-secondary" id="clear-filters" style="height: 100%;" disabled>Remover Filtros</button>
+        </form>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="col-small"></th>
+                <th>Nome</th>
+                <th>Texto</th>
+                <th>Modelo</th>
+                <th>Criador</th>
+                <th>Categorias</th>
+                <th class="column-rating">Avaliação</th>
+                <th class="column-user-rating">Minha Avaliação</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in prompts_with_ratings %}
+            <tr>
+                <td class="col-small"><input type="checkbox" name="select_prompt" value="{{ item.prompt.id }}"></td>
+                <td><a href="{{ url_for('main.edit_prompt', id=item.prompt.id) }}">{{ item.prompt.name }}</a></td>
+                <td>{{ item.prompt.text }}</td>
+                <td>{{ item.prompt.model.name }}</td>
+                <td>{{ item.prompt.author.username }}</td>
+                <td>
+                    {% for category in item.prompt.categories %}
+                        {{ category.name }}{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td class="average-rating">
+                    {% for i in range(1, 6) %}
+                        <span class="star{% if item.average_rating >= i %} filled{% else %} outlined{% endif %}">★</span>
+                    {% endfor %}
+                </td>
+                <td>
+                    <div class="rating" data-prompt-id="{{ item.prompt.id }}">
+                        {% for i in range(1, 6) %}
+                            <span class="star{% if item.user_rating >= i %} filled{% else %} outlined{% endif %}" data-value="{{ i }}">★</span>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteSelectedButton = document.getElementById('delete-selected');
+        const checkboxes = document.querySelectorAll('input[name="select_prompt"]');
+
+        function updateDeleteButton() {
+            let anyChecked = false;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    anyChecked = true;
+                }
+            });
+            deleteSelectedButton.disabled = !anyChecked;
+        }
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateDeleteButton);
+        });
+
+        deleteSelectedButton.addEventListener('click', function() {
+            const selectedIds = [];
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedIds.push(checkbox.value);
+                }
+            });
+
+            if (selectedIds.length > 0 && confirm('Tem certeza de que deseja excluir os prompts selecionados?')) {
+                fetch('/delete_prompts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                }).then(response => response.json())
+                  .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Ocorreu um erro ao tentar excluir os prompts.');
+                    }
+                });
+            }
+        });
+
+        const clearFiltersButton = document.getElementById('clear-filters');
+        const filtersForm = document.querySelector('.filters-form');
+        const filters = filtersForm.querySelectorAll('select');
+        
+        function checkFilters() {
+            let hasFilters = false;
+            filters.forEach(filter => {
+                if (filter.value) {
+                    hasFilters = true;
+                }
+            });
+            clearFiltersButton.disabled = !hasFilters;
+        }
+        
+        filters.forEach(filter => {
+            filter.addEventListener('change', checkFilters);
+        });
+        
+        clearFiltersButton.addEventListener('click', function() {
+            filters.forEach(filter => {
+                filter.value = '';
+            });
+            clearFiltersButton.disabled = true;
+            filtersForm.submit();
+        });
+
+        checkFilters();
+
+        document.querySelectorAll('.rating .star').forEach(star => {
+            star.addEventListener('click', function() {
+                const promptId = this.parentElement.getAttribute('data-prompt-id');
+                const ratingValue = this.getAttribute('data-value');
+
+                fetch(`/rate_prompt/${promptId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rating: ratingValue })
+                }).then(response => response.json())
+                  .then(data => {
+                    if (data.success) {
+                        const ratingDiv = document.querySelector(`.rating[data-prompt-id="${promptId}"]`);
+                        const userRating = data.user_rating;
+
+                        ratingDiv.querySelectorAll('.star').forEach(star => {
+                            const value = star.getAttribute('data-value');
+                            if (value <= userRating) {
+                                star.classList.add('filled');
+                                star.classList.remove('outlined');
+                            } else {
+                                star.classList.add('outlined');
+                                star.classList.remove('filled');
+                            }
+                        });
+
+                        const averageRatingElement = ratingDiv.closest('tr').querySelector('.average-rating');
+                        const averageRating = data.average_rating;
+
+                        averageRatingElement.innerHTML = '';
+                        for (let i = 1; i <= 5; i++) {
+                            const starSpan = document.createElement('span');
+                            starSpan.classList.add('star', averageRating >= i ? 'filled' : 'outlined');
+                            starSpan.innerText = '★';
+                            averageRatingElement.appendChild(starSpan);
+                        }
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

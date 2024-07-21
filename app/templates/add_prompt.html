@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Adicionar Novo Prompt</h2>
+  <form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <table>
+      <tr>
+        <td>{{ form.name.label }}</td>
+        <td>{{ form.name(size=32) }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.text.label }}</td>
+        <td>{{ form.text(rows=10, cols=40) }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.role.label }}</td>
+        <td>{{ form.role }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.temperature.label }}</td>
+        <td>
+          {{ form.temperature.label(class="form-control-label") }}
+          <input type="range" class="form-control-range w-100" id="temperature" name="temperature" min="0" max="1" step="0.01" value="{{ form.temperature.data if form.temperature.data else 0.5 }}" oninput="document.getElementById('temp_value').innerText = this.value">
+          <div class="w-100 text-center mt-2" id="temp_value">{{ form.temperature.data if form.temperature.data else 0.5 }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td>{{ form.model.label }}</td>
+        <td>{{ form.model }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.categories.label }}</td>
+        <td>{{ form.categories }}</td>
+      </tr>
+      <tr>
+        <td>{{ form.json_file.label }}</td> <!-- Corrigido de json_data para json_file -->
+        <td>{{ form.json_file }}</td>
+      </tr>
+    </table>
+    <p><input type="submit" value="Adicionar"></p>
+  </form>
+  <script>
+    var slider = document.querySelector("input[name='temperature']");
+    var output = document.getElementById("temp_value");
+    slider.oninput = function() {
+      output.innerHTML = this.value;
+    }
+  </script>
+{% endblock %}

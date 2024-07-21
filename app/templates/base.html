@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    {% if not (request.endpoint == 'main.login' or request.endpoint == 'main.register') %}
+    <div class="navbar">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo">
+      <!-- <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.index') }}'">Início</button> -->
+      {% if current_user.is_authenticated %}
+        <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.list_prompts') }}'">Prompts</button>
+        <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.list_categories') }}'">Categorias</button>
+        <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.list_models') }}'">Modelos</button>
+        <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.logout') }}'">Sair</button>
+      {% else %}
+        <button class="btn-navbar" onclick="window.location.href='{{ url_for('main.login') }}'">Entrar</button>
+      {% endif %}
+    </div>
+    {% endif %}
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

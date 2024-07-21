@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Bem-vindo ao ProMPts Share!</h1>
+  <p>
+    <a href="{{ url_for('list_prompts') }}" class="btn">Listar Prompts</a>
+    <a href="{{ url_for('add_prompt') }}" class="btn">Adicionar Novo Prompt</a>
+  </p>
+  <p>
+    <a href="{{ url_for('list_users') }}" class="btn">Listar Usuários</a>
+    <a href="{{ url_for('list_categories') }}" class="btn">Listar Categorias</a>
+    <a href="{{ url_for('list_models') }}" class="btn">Listar Modelos</a>
+  </p>
+{% endblock %}

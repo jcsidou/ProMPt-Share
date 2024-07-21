@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Adicionar Nova Categoria</h2>
+  <form method="post">
+    {{ form.hidden_tag() }}
+    <table>
+      <tr>
+        <td>{{ form.name.label }}</td>
+        <td>{{ form.name(size=32) }}</td>
+      </tr>
+    </table>
+    <p><input type="submit" value="Adicionar"></p>
+  </form>
+{% endblock %}

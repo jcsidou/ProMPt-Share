@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-left">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="login-logo" alt="Logo">
+    </div>
+    <div class="login-right">
+        <form method="POST" action="{{ url_for('main.login') }}" class="login-form">
+            {{ form.hidden_tag() }}
+            <table class="login-table">
+                <tr>
+                    <td class="form-label">{{ form.username.label }}</td>
+                    <td class="form-control">{{ form.username }}</td>
+                </tr>
+                <tr>
+                    <td class="form-label">{{ form.password.label }}</td>
+                    <td class="form-control">{{ form.password }}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="form-check">{{ form.remember_me }} {{ form.remember_me.label }}</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>{{ form.submit(class_="btn btn-primary btn-login") }}</td>
+                </tr>
+                <tr>
+                    <td class="register-text">Ainda não tem uma conta?</td>
+                    <td><a href="{{ url_for('main.register') }}" class="btn btn-register">Registrar</a></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+{% endblock %}
